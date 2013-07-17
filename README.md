@@ -22,15 +22,16 @@ scheduling library like [Quartz](http://quartz-scheduler.org).
     * wildcard ranges, e.g. `*/5`
     * aliases:
 
-        Alias       Description                                                             Equivalent
-        @reboot     Run at startup
-        @yearly     Run once a year at midnight in the morning of January 1                 0 0 1 1 *
-        @annually   (same as @yearly)
-        @monthly    Run once a month at midnight in the morning of the first of the month   0 0 1 * *
-        @weekly     Run once a week at midnight in the morning of Sunday                    0 0 * * 0
-        @daily      Run once a day at midnight                                              0 0 * * *
-        @midnight   (same as @daily)
-        @hourly     Run once an hour at the beginning of the hour                           0 * * * *
+Alias     | Description                                                           | Equivalent
+----------|-----------------------------------------------------------------------|-----------
+@reboot   | Run at startup                                                        |
+@yearly   | Run once a year at midnight in the morning of January 1               | 0 0 1 1 *
+@annually | (same as @yearly)                                                     |
+@monthly  | Run once a month at midnight in the morning of the first of the month | 0 0 1 * *
+@weekly   | Run once a week at midnight in the morning of Sunday                  | 0 0 * * 0
+@daily    | Run once a day at midnight                                            | 0 0 * * *
+@midnight | (same as @daily)                                                      |
+@hourly   | Run once an hour at the beginning of the hour                         | 0 * * * *
 
 * support [Quartz](http://quartz-scheduler.org) syntax
     * day of week 1-7 (with 1=Sunday)
@@ -126,8 +127,3 @@ public boolean matches(LocalDateTime time) {
     return contains(number);
 }
 ```
-=======
-cron-expression
-===============
-
-Java cron expression library
