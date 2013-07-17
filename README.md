@@ -23,15 +23,15 @@ scheduling library like [Quartz](http://quartz-scheduler.org).
     * aliases:
 
 Alias     | Description                                                           | Equivalent
-----------|-----------------------------------------------------------------------|-----------
+----------|-----------------------------------------------------------------------|-------------
 @reboot   | Run at startup                                                        |
-@yearly   | Run once a year at midnight in the morning of January 1               | 0 0 1 1 *
+@yearly   | Run once a year at midnight in the morning of January 1               | `0 0 1 1 *`
 @annually | (same as @yearly)                                                     |
-@monthly  | Run once a month at midnight in the morning of the first of the month | 0 0 1 * *
-@weekly   | Run once a week at midnight in the morning of Sunday                  | 0 0 * * 0
-@daily    | Run once a day at midnight                                            | 0 0 * * *
+@monthly  | Run once a month at midnight in the morning of the first of the month | `0 0 1 * *`
+@weekly   | Run once a week at midnight in the morning of Sunday                  | `0 0 * * 0`
+@daily    | Run once a day at midnight                                            | `0 0 * * *`
 @midnight | (same as @daily)                                                      |
-@hourly   | Run once an hour at the beginning of the hour                         | 0 * * * *
+@hourly   | Run once an hour at the beginning of the hour                         | `0 * * * *`
 
 * support [Quartz](http://quartz-scheduler.org) syntax
     * day of week 1-7 (with 1=Sunday)
@@ -58,6 +58,8 @@ Alias     | Description                                                         
 
 ## Examples
 
+### Normal
+
 ```java
 DateTime time = new DateTime().withDayOfYear(1).withTimeAtStartOfDay();
 assert CronExpression.parse("0 0 1 1 *").matches(time);
@@ -65,6 +67,18 @@ assert CronExpression.parse("@yearly").matches(time);
 assert CronExpression.parse("@annually").matches(time);
 assert CronExpression.yearly().matches(time);
 assert CronExpression.annually().matches(time);
+```
+
+### Quartz-like
+
+```java
+CronExpression expression = CronExpression.parser()
+            .withSecondsField(true)
+            .withOneBasedDayOfWeek(true)
+            .allowBothDayFields(false)
+            .parse("0 15 10 L * ?");
+DateTime time = new DateTime().withTime(10, 15, 0, 0).withDayOfMonth(31).withMonthOfYear(1).withYear(2013);
+assert expression.matches(time);
 ```
 
 You can find more examples in the unit tests.
