@@ -44,6 +44,7 @@ public class CronExpressionTest {
     @Test
     public void testHashCode() {
         assertEquals(CronExpression.daily().hashCode(), CronExpression.parse("@daily").hashCode());
+        assertEquals(CronExpression.daily().hashCode(), CronExpression.parse("@midnight").hashCode());
         assertEquals(CronExpression.hourly().hashCode(), CronExpression.parse("@hourly").hashCode());
         assertEquals(CronExpression.monthly().hashCode(), CronExpression.parse("@monthly").hashCode());
         assertEquals(CronExpression.weekly().hashCode(), CronExpression.parse("@weekly").hashCode());
@@ -60,6 +61,7 @@ public class CronExpressionTest {
     @Test
     public void testEquals() {
         assertEquals(CronExpression.daily(), CronExpression.parse("@daily"));
+        assertEquals(CronExpression.daily(), CronExpression.parse("@midnight"));
         assertEquals(CronExpression.hourly(), CronExpression.parse("@hourly"));
         assertEquals(CronExpression.monthly(), CronExpression.parse("@monthly"));
         assertEquals(CronExpression.weekly(), CronExpression.parse("@weekly"));
