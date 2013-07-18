@@ -17,8 +17,8 @@ scheduling library like [Quartz](http://quartz-scheduler.org).
     * both day of week and day of month may be specified in a single expression
     * etc.
 * support syntax of other common implementations
-    * ranges, e.g. `1-10` which would be equivalent to `1,2,3,4,5,6,7,8,9,10`
-    * ranges with skipped numbers, e.g. `1-10/2` which would be equivalent to `1,3,5,7,9`
+    * ranges, e.g. `1-10` which is equivalent to `1,2,3,4,5,6,7,8,9,10`
+    * ranges with skipped numbers, e.g. `1-10/2` which is equivalent to `1,3,5,7,9`
     * wildcard ranges, e.g. `*/5`
     * aliases:
 
@@ -77,7 +77,11 @@ CronExpression expression = CronExpression.parser()
             .withOneBasedDayOfWeek(true)
             .allowBothDayFields(false)
             .parse("0 15 10 L * ?");
-DateTime time = new DateTime().withTime(10, 15, 0, 0).withDayOfMonth(31).withMonthOfYear(1).withYear(2013);
+DateTime time = new DateTime()
+            .withTime(10, 15, 0, 0)
+            .withDayOfMonth(31)
+            .withMonthOfYear(1)
+            .withYear(2013);
 assert expression.matches(time);
 ```
 
