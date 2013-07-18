@@ -73,8 +73,22 @@ public abstract class CronExpression {
         return parse(HOURLY);
     }
 
+    public static boolean isValid(String s) {
+        return isValid(s, DEFAULT_ONE_BASED_DAY_OF_WEEK, DEFAULT_SECONDS, DEFAULT_ALLOW_BOTH_DAYS);
+    }
+
     public static CronExpression parse(String s) {
         return parse(s, DEFAULT_ONE_BASED_DAY_OF_WEEK, DEFAULT_SECONDS, DEFAULT_ALLOW_BOTH_DAYS);
+    }
+
+    private static boolean isValid(String s, boolean oneBasedDayOfWeek, boolean seconds, boolean allowBothDays) {
+        boolean valid = false;
+        try {
+            parse(s, oneBasedDayOfWeek, seconds, allowBothDays);
+            valid = true;
+        } catch (Exception e) {
+        }
+        return valid;
     }
 
     private static CronExpression parse(String s, boolean oneBasedDayOfWeek, boolean seconds, boolean allowBothDays) {
@@ -103,6 +117,10 @@ public abstract class CronExpression {
             oneBasedDayOfWeek = DEFAULT_ONE_BASED_DAY_OF_WEEK;
             seconds = DEFAULT_SECONDS;
             allowBothDays = DEFAULT_ALLOW_BOTH_DAYS;
+        }
+
+        public boolean isValid(String s) {
+            return CronExpression.isValid(s, oneBasedDayOfWeek, seconds, allowBothDays);
         }
 
         public CronExpression parse(String s) {

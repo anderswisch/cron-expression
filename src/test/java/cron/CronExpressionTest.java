@@ -288,11 +288,25 @@ public class CronExpressionTest {
         assertDaily();
     }
 
-
     @Test
     public void hourlyKeyword() {
         expression = CronExpression.parse("@hourly");
         assertHourly();
+    }
+
+    @Test
+    public void invalid() {
+        assertFalse(CronExpression.isValid(null));
+        assertFalse(CronExpression.isValid(""));
+        assertFalse(CronExpression.isValid("a"));
+        assertFalse(CronExpression.isValid("0 0 1 * X"));
+        assertFalse(CronExpression.isValid("0 0 1 * 1X"));
+    }
+
+    @Test
+    public void invalidDueToSecondsField() {
+        assertTrue(CronExpression.isValid("0 0 1 * 1"));
+        assertFalse(CronExpression.parser().allowBothDayFields(false).isValid("0 0 1 * 1"));
     }
 
     private void assertWeekly() {
