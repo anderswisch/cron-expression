@@ -66,13 +66,11 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>14.0.1</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>2.2</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.quartz-scheduler</groupId>
