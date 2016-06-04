@@ -5,7 +5,7 @@ interface for checking whether a `cron` expression matches a `java.time.ZonedDat
 integrating with `java.util.concurrent`, though using this is optional and it might be more straightforward to roll
 your own.
 
-It might come in handy if you're already using (or don't mind using) [Guava](http://code.google.com/p/guava-libraries/),
+It might come in handy if you're already using (or don't mind using) Java8, [Guava](http://code.google.com/p/guava-libraries/),
 want to handle `cron` expressions, and don't want a full-blown scheduling library like [Quartz](http://quartz-scheduler.org).
 
 ## Motivation
