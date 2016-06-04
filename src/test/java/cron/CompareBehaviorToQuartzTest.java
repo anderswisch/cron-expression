@@ -23,23 +23,24 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import static cron.DateTimes.toDates;
+import static org.junit.Assert.assertTrue;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static cron.DateTimes.toDates;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class CompareBehaviorToQuartzTest {
     public static final CronExpression.Parser quartzLike = CronExpression.parser()
@@ -47,7 +48,7 @@ public class CompareBehaviorToQuartzTest {
             .withOneBasedDayOfWeek(true)
             .allowBothDayFields(false);
     private static final String timeFormatString = "s m H d M E yyyy";
-    private static final DateTimeFormatter dateTimeFormat = DateTimeFormat.forPattern(timeFormatString);
+    private static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern(timeFormatString);
     private final DateFormat dateFormat = new SimpleDateFormat(timeFormatString);
 
     protected String string;
@@ -185,11 +186,11 @@ public class CompareBehaviorToQuartzTest {
     @Test
     public void at_10_15am_on_the_last_day_of_every_month() throws Exception {
         string = "0 15 10 L * ?";
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTime(10, 15, 0, 0);
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().withDayOfYear(1).truncatedTo(ChronoUnit.DAYS).plusHours(10).plusMinutes(15);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(t.dayOfMonth().withMaximumValue());
+            times.add(t.with(TemporalAdjusters.lastDayOfMonth()));
             t = t.plusMonths(1);
         }
         check(times);
@@ -198,11 +199,11 @@ public class CompareBehaviorToQuartzTest {
     @Test
     public void at_10_15am_on_the_last_friday_of_every_month() throws Exception {
         string = "0 15 10 ? * 6L";
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTime(10, 15, 0, 0);
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).plusHours(10).plusMinutes(15);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(DateTimes.lastOfMonth(t, DateTimeConstants.FRIDAY));
+            times.add(DateTimes.lastOfMonth(t, DayOfWeek.FRIDAY));
             t = t.plusMonths(1);
         }
         check(times);
@@ -211,11 +212,11 @@ public class CompareBehaviorToQuartzTest {
     @Test
     public void at_10_15am_on_the_last_friday_of_every_month_during_2002_through_2005() throws Exception {
         string = "0 15 10 ? * 6L 2002-2005";
-        List<DateTime> times = new ArrayList<>();
+        List<ZonedDateTime> times = new ArrayList<>();
         for (int year = 2002; year <= 2005; year++) {
-            DateTime t = new DateTime().withYear(year).withDayOfYear(1).withTime(10, 15, 0, 0);
+            ZonedDateTime t = ZonedDateTime.now().withYear(year).truncatedTo(ChronoUnit.DAYS).plusHours(10).plusMinutes(15);
             while (t.getYear() == year) {
-                times.add(DateTimes.lastOfMonth(t, DateTimeConstants.FRIDAY));
+                times.add(DateTimes.lastOfMonth(t, DayOfWeek.FRIDAY));
                 t = t.plusMonths(1);
             }
         }
@@ -226,11 +227,11 @@ public class CompareBehaviorToQuartzTest {
     @Test@Ignore // TODO let's see if we can make this more reliably faster than the respective quartz run 
     public void at_10_15am_on_the_third_friday_of_every_month() throws Exception {
         string = "0 15 10 ? * 6#3";
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTime(10, 15, 0, 0);
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().withDayOfYear(1).truncatedTo(ChronoUnit.DAYS).plusHours(10).plusMinutes(15);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(DateTimes.nthOfMonth(t, DateTimeConstants.FRIDAY, 3));
+            times.add(DateTimes.nthOfMonth(t, DayOfWeek.FRIDAY, 3));
             t = t.plusMonths(1);
         }
         check(times);
@@ -261,7 +262,7 @@ public class CompareBehaviorToQuartzTest {
         check(expected.dateTimes());
     }
 
-    protected void check(Iterable<DateTime> times) throws ParseException {
+    protected void check(Iterable<ZonedDateTime> times) throws ParseException {
         checkLocalImplementation(times);
         checkQuartzImplementation(toDates(times));
     }
@@ -272,9 +273,9 @@ public class CompareBehaviorToQuartzTest {
             assertTrue(dateFormat.format(time).toUpperCase() + " doesn't match expression: " + string, quartz.isSatisfiedBy(time));
     }
 
-    private void checkLocalImplementation(Iterable<DateTime> times) {
+    private void checkLocalImplementation(Iterable<ZonedDateTime> times) {
         CronExpression expr = quartzLike.parse(string);
-        for (DateTime time : times)
-            assertTrue(dateTimeFormat.print(time).toUpperCase() + " doesn't match expression: " + string, expr.matches(time));
+        for (ZonedDateTime time : times)
+            assertTrue(time.format(dateTimeFormat).toUpperCase() + " doesn't match expression: " + string, expr.matches(time));
     }
 }

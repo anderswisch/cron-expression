@@ -23,11 +23,13 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
+
+import java.time.DayOfWeek;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 
 public class DayOfMonthFieldTest {
     private DayOfMonthField field;
@@ -35,21 +37,21 @@ public class DayOfMonthFieldTest {
     @Test
     public void last() {
         parse("L");
-        assertTrue(field.matches(new DateTime().dayOfMonth().withMaximumValue()));
+        assertTrue(field.matches(ZonedDateTime.now().with(TemporalAdjusters.lastDayOfMonth())));
     }
 
     @Test
     public void nearestFriday() {
-        DateTime saturday = new DateTime().withDayOfWeek(DateTimeConstants.SATURDAY);
-        DateTime friday = saturday.minusDays(1);
+        ZonedDateTime saturday = ZonedDateTime.now().with(DayOfWeek.SATURDAY);
+        ZonedDateTime friday = saturday.minusDays(1);
         parse(saturday.getDayOfMonth() + "W");
         assertTrue(field.matches(friday));
     }
 
     @Test
     public void nearestMonday() {
-        DateTime sunday = new DateTime().withDayOfWeek(DateTimeConstants.SUNDAY);
-        DateTime monday = sunday.plusDays(1);
+        ZonedDateTime sunday = ZonedDateTime.now().with(DayOfWeek.SUNDAY);
+        ZonedDateTime monday = sunday.plusDays(1);
         parse(sunday.getDayOfMonth() + "W");
         assertTrue(field.matches(monday));
     }

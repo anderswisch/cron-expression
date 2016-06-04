@@ -24,8 +24,12 @@
 package cron;
 
 import com.google.common.collect.ImmutableSortedSet;
-import org.joda.time.DateTime;
 
+import java.time.DayOfWeek;
+import java.time.Month;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Iterator;
 import java.util.NavigableSet;
 
@@ -49,7 +53,7 @@ public class Times {
         daysOfMonth = new Integers();
     }
 
-    public NavigableSet<DateTime> dateTimes() {
+    public NavigableSet<ZonedDateTime> dateTimes() {
         if (seconds.isEmpty())
             seconds.withRange(0, 1);
         if (minutes.isEmpty())
@@ -59,21 +63,21 @@ public class Times {
         if (months.isEmpty())
             months.withRange(1, 2);
         if (years.isEmpty()) {
-            int thisYear = new DateTime().getYear();
+            int thisYear = ZonedDateTime.now().getYear();
             years.withRange(thisYear, thisYear + 1);
         }
-        ImmutableSortedSet.Builder<DateTime> builder = ImmutableSortedSet.naturalOrder();
+        ImmutableSortedSet.Builder<ZonedDateTime> builder = ImmutableSortedSet.naturalOrder();
         for (int second : seconds) {
             for (int minute : minutes) {
                 for (int hour : hours) {
                     for (int month : months) {
                         for (int year : years) {
-                            DateTime base = new DateTime()
-                                    .withTimeAtStartOfDay()
-                                    .withSecondOfMinute(second)
-                                    .withMinuteOfHour(minute)
-                                    .withHourOfDay(hour)
-                                    .withMonthOfYear(month)
+                            ZonedDateTime base = ZonedDateTime.now()
+                                    .truncatedTo(ChronoUnit.DAYS)
+                                    .withSecond(second)
+                                    .withMinute(minute)
+                                    .withHour(hour)
+                                    .withMonth(month)
                                     .withDayOfMonth(1)
                                     .withYear(year);
                             if (!daysOfWeek.isEmpty() && !daysOfMonth.isEmpty()) {
@@ -94,21 +98,21 @@ public class Times {
         return builder.build();
     }
 
-    private void addDaysOfWeek(ImmutableSortedSet.Builder<DateTime> builder, DateTime base) {
-        int month = base.getMonthOfYear();
+    private void addDaysOfWeek(ImmutableSortedSet.Builder<ZonedDateTime> builder, ZonedDateTime base) {
+        Month month = base.getMonth();
         Iterator<Integer> iterator = daysOfWeek.iterator();
-        base = base.withDayOfWeek(iterator.next());
-        if (base.getMonthOfYear() != month)
+        base = base.with(DayOfWeek.of(iterator.next()));
+        if (base.getMonth() != month)
             base = base.plusWeeks(1);
         do {
             builder.add(base);
             base = base.plusWeeks(1);
-        } while (base.getMonthOfYear() == month);
+        } while (base.getMonth() == month);
     }
 
-    private void addDaysOfMonth(ImmutableSortedSet.Builder<DateTime> builder, DateTime base) {
+    private void addDaysOfMonth(ImmutableSortedSet.Builder<ZonedDateTime> builder, ZonedDateTime base) {
         for (int day : daysOfMonth)
-            if (day <= base.dayOfMonth().getMaximumValue())
+            if (day <= base.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth())
                 builder.add(base.withDayOfMonth(day));
     }
 }

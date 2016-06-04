@@ -23,15 +23,17 @@
  */
 package cron;
 
+import java.time.DayOfWeek;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Set;
+
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import org.joda.time.DateTime;
-
-import java.util.Set;
 
 public class DayOfWeekField extends DefaultField {
-    public static final long MILLISECONDS_PER_WEEK = 604800000l;
+    public static final long SECONDS_PER_WEEK = 604800l;
     private final Multimap<Integer, Integer> nth;
     private final Set<Integer> last;
     private final boolean hasNth, hasLast, unspecified;
@@ -49,23 +51,21 @@ public class DayOfWeekField extends DefaultField {
         return unspecified;
     }
 
-    public boolean matches(DateTime time) {
+    public boolean matches(ZonedDateTime time) {
         if (unspecified)
             return true;
-        final int dayOfWeek = time.getDayOfWeek();
-        int number = number(dayOfWeek);
+        final DayOfWeek dayOfWeek = time.getDayOfWeek();
+        int number = number(dayOfWeek.getValue());
         if (hasLast) {
-            return last.contains(number) && time.getMonthOfYear() != time.plusWeeks(1).getMonthOfYear();
+            return last.contains(number) && time.getMonth() != time.plusWeeks(1).getMonth();
         } else if (hasNth) {
-            for (int possibleMatch : nth.get(number)) {
-                DateTime midnight = time.withTimeAtStartOfDay();
-                DateTime first = midnight.withDayOfMonth(1).withDayOfWeek(dayOfWeek);
-                if (first.getMonthOfYear() != time.getMonthOfYear())
-                    first = first.plusWeeks(1);
-                DateTime tomorrow = midnight.plusDays(1);
-                int weekNumber = 1 + (int) ((tomorrow.getMillis() - first.getMillis()) / MILLISECONDS_PER_WEEK);
-                if (possibleMatch == weekNumber)
-                    return true;
+            int dayOfYear = time.getDayOfYear();
+            if (nth.containsKey(number)) {
+                for (int possibleMatch : nth.get(number)) {
+                    if (dayOfYear == time.with(TemporalAdjusters.dayOfWeekInMonth(possibleMatch, dayOfWeek)).getDayOfYear()) {
+                        return true;
+                    }
+                }
             }
         }
         return contains(number);
@@ -77,14 +77,21 @@ public class DayOfWeekField extends DefaultField {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        if (!super.equals(o))
+            return false;
         DayOfWeekField that = (DayOfWeekField) o;
-        if (hasLast != that.hasLast) return false;
-        if (hasNth != that.hasNth) return false;
-        if (!last.equals(that.last)) return false;
-        if (!nth.equals(that.nth)) return false;
+        if (hasLast != that.hasLast)
+            return false;
+        if (hasNth != that.hasNth)
+            return false;
+        if (!last.equals(that.last))
+            return false;
+        if (!nth.equals(that.nth))
+            return false;
         return true;
     }
 
