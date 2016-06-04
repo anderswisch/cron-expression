@@ -41,7 +41,7 @@ public class CompareSpeedToQuartzTest extends CompareBehaviorToQuartzTest {
         final CronExpression local = quartzLike.parse(string);
         final org.quartz.CronExpression quartz = new org.quartz.CronExpression(string);
         final int trials = 25;
-        final Stopwatch clock = new Stopwatch().start();
+        final Stopwatch clock = Stopwatch.createStarted();
         for (int i = 0; i < trials; i++)
             for (DateTime time : times)
                 local.matches(time);
