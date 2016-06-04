@@ -24,9 +24,9 @@
 package cron;
 
 import com.google.common.base.Stopwatch;
-import org.joda.time.DateTime;
 
 import java.text.ParseException;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -36,14 +36,14 @@ import static org.junit.Assert.assertTrue;
 
 public class CompareSpeedToQuartzTest extends CompareBehaviorToQuartzTest {
     @Override
-    protected void check(final Iterable<DateTime> times) throws ParseException {
+    protected void check(final Iterable<ZonedDateTime> times) throws ParseException {
         final Iterable<Date> dates = DateTimes.toDates(times);
         final CronExpression local = quartzLike.parse(string);
         final org.quartz.CronExpression quartz = new org.quartz.CronExpression(string);
         final int trials = 25;
         final Stopwatch clock = Stopwatch.createStarted();
         for (int i = 0; i < trials; i++)
-            for (DateTime time : times)
+            for (ZonedDateTime time : times)
                 local.matches(time);
         final long localNano = clock.elapsed(TimeUnit.NANOSECONDS);
         clock.reset().start();

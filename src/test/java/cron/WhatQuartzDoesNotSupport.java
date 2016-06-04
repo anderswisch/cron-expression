@@ -23,33 +23,38 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.junit.Test;
+import static cron.DateTimes.nthOfMonth;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.text.ParseException;
+import java.time.DayOfWeek;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import static cron.DateTimes.nthOfMonth;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class WhatQuartzDoesNotSupport {
     @Test
     public void multipleNthDayOfWeek() throws Exception {
         try {
             org.quartz.CronExpression quartz = new org.quartz.CronExpression("0 0 0 ? * 6#3,4#1,3#2");
-            List<DateTime> times = new ArrayList<>();
-            DateTime t = new DateTime().withDayOfYear(1).withTimeAtStartOfDay();
+            List<ZonedDateTime> times = new ArrayList<>();
+            ZonedDateTime t = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).withDayOfYear(1);
             int year = t.getYear();
             while (t.getYear() == year) {
-                times.add(nthOfMonth(t, DateTimeConstants.FRIDAY, 3));
-                times.add(nthOfMonth(t, DateTimeConstants.TUESDAY, 2));
+                times.add(nthOfMonth(t, DayOfWeek.FRIDAY, 3));
+                times.add(nthOfMonth(t, DayOfWeek.TUESDAY, 2));
                 t = t.plusMonths(1);
             }
-            for (DateTime time : times) {
-                boolean satisfied = quartz.isSatisfiedBy(time.toDate());
-                if (time.getDayOfWeek() == DateTimeConstants.TUESDAY) {
+            for (ZonedDateTime time : times) {
+                boolean satisfied = quartz.isSatisfiedBy(Date.from(time.toInstant()));
+                if (time.getDayOfWeek() == DayOfWeek.TUESDAY) {
                     // Earlier versions of Quartz only picked up the last one
                     assertTrue(satisfied);
                 } else {

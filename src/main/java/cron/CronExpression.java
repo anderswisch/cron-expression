@@ -25,14 +25,14 @@ package cron;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import org.joda.time.DateTime;
 
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class CronExpression {
-    public abstract boolean matches(DateTime t);
+    public abstract boolean matches(ZonedDateTime t);
 
     private static final String YEARLY = "0 0 1 1 *",
             MONTHLY = "0 0 1 * *",

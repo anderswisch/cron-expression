@@ -23,18 +23,25 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.joda.time.IllegalFieldValueException;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.junit.Test;
+import static cron.DateTimes.midnight;
+import static cron.DateTimes.nearestWeekday;
+import static cron.DateTimes.now;
+import static cron.DateTimes.nthOfMonth;
+import static cron.DateTimes.startOfHour;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.time.DayOfWeek;
+import java.time.Month;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cron.DateTimes.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class CronExpressionTest {
     public static final CronExpression.Parser withSecondsField = CronExpression.parser().withSecondsField(true);
@@ -107,8 +114,8 @@ public class CronExpressionTest {
     @Test
     public void nearestWeekdayOfMonth() {
         expression = CronExpression.parse("0 0 5W * *");
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = DateTimes.startOfYear();
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = DateTimes.startOfYear();
         int year = t.getYear();
         do {
             times.add(nearestWeekday(t.withDayOfMonth(5)));
@@ -119,14 +126,14 @@ public class CronExpressionTest {
 
     @Test
     public void nearestFriday() {
-        DateTime t = now().withTimeAtStartOfDay().withDayOfWeek(DateTimeConstants.SATURDAY);
+        ZonedDateTime t = now().truncatedTo(ChronoUnit.DAYS).with(DayOfWeek.SATURDAY);
         expression = CronExpression.parse("0 0 " + t.getDayOfMonth() + "W * *");
         assertMatches(t.minusDays(1));
     }
 
     @Test
     public void nearestMonday() {
-        DateTime t = now().withTimeAtStartOfDay().withDayOfWeek(DateTimeConstants.SUNDAY);
+        ZonedDateTime t = now().truncatedTo(ChronoUnit.DAYS).with(DayOfWeek.SUNDAY);
         expression = CronExpression.parse("0 0 " + t.getDayOfMonth() + "W * *");
         assertMatches(t.plusDays(1));
     }
@@ -134,26 +141,26 @@ public class CronExpressionTest {
     @Test
     public void nonMatchingNth() {
         expression = CronExpression.parse("0 0 ? * 2#2");
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTimeAtStartOfDay();
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).withDayOfYear(1);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(nthOfMonth(t, DateTimeConstants.TUESDAY, 1));
+            times.add(nthOfMonth(t, DayOfWeek.TUESDAY, 1));
             t = t.plusMonths(1);
         }
-        for (DateTime time : times)
+        for (ZonedDateTime time : times)
             assertFalse(expression.matches(time));
     }
 
     @Test
     public void multipleNth() {
         expression = CronExpression.parse("0 0 ? * 5#3,2#2");
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTimeAtStartOfDay();
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).withDayOfYear(1);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(nthOfMonth(t, DateTimeConstants.FRIDAY, 3));
-            times.add(nthOfMonth(t, DateTimeConstants.TUESDAY, 2));
+            times.add(nthOfMonth(t, DayOfWeek.FRIDAY, 3));
+            times.add(nthOfMonth(t, DayOfWeek.TUESDAY, 2));
             t = t.plusMonths(1);
         }
         assertMatchesAll(times);
@@ -162,11 +169,11 @@ public class CronExpressionTest {
     @Test
     public void thirdFriday() {
         String string = "0 0 ? * 5#3";
-        List<DateTime> times = new ArrayList<>();
-        DateTime t = new DateTime().withDayOfYear(1).withTimeAtStartOfDay();
+        List<ZonedDateTime> times = new ArrayList<>();
+        ZonedDateTime t = ZonedDateTime.now().truncatedTo(ChronoUnit.DAYS).withDayOfYear(1);
         int year = t.getYear();
         while (t.getYear() == year) {
-            times.add(nthOfMonth(t, DateTimeConstants.FRIDAY, 3));
+            times.add(nthOfMonth(t, DayOfWeek.FRIDAY, 3));
             t = t.plusMonths(1);
         }
         expression = CronExpression.parse(string);
@@ -176,7 +183,7 @@ public class CronExpressionTest {
     @Test
     public void reboot() {
         expression = CronExpression.parse("@reboot");
-        DateTime now = now();
+        ZonedDateTime now = now();
         assertTrue(expression.matches(now));
         assertFalse(expression.matches(now));
     }
@@ -184,50 +191,50 @@ public class CronExpressionTest {
     @Test
     public void minuteFullRangeExplicit() {
         expression = CronExpression.parse("0-59 * * * * *");
-        DateTime time = startOfHour();
-        int hour = time.getHourOfDay();
+        ZonedDateTime time = startOfHour();
+        int hour = time.getHour();
         do {
             assertMatches(time);
             time = time.plusMinutes(1);
-        } while (time.getHourOfDay() == hour);
+        } while (time.getHour() == hour);
     }
 
     @Test
     public void minuteRestrictedRange() {
         expression = CronExpression.parse("10-20 * * * * *");
         int first = 10, last = 20;
-        DateTime time = startOfHour();
-        int hour = time.getHourOfDay();
+        ZonedDateTime time = startOfHour();
+        int hour = time.getHour();
         do {
-            int minute = time.getMinuteOfHour();
+            int minute = time.getMinute();
             assertEquals(first <= minute && minute <= last, expression.matches(time));
             time = time.plusMinutes(1);
-        } while (time.getHourOfDay() == hour);
+        } while (time.getHour() == hour);
     }
 
     @Test
     public void minuteFullRangeMod() {
         expression = CronExpression.parse("*/5 * * * * *");
-        DateTime time = startOfHour();
-        int hour = time.getHourOfDay();
+        ZonedDateTime time = startOfHour();
+        int hour = time.getHour();
         do {
-            int minute = time.getMinuteOfHour();
+            int minute = time.getMinute();
             assertEquals(minute % 5 == 0, expression.matches(time));
             time = time.plusMinutes(1);
-        } while (time.getHourOfDay() == hour);
+        } while (time.getHour() == hour);
     }
 
     @Test
     public void minuteRestrictedRangeMod() {
         expression = CronExpression.parse("10-20/5 * * * * *");
         int first = 10, last = 20;
-        DateTime time = startOfHour();
-        int hour = time.getHourOfDay();
+        ZonedDateTime time = startOfHour();
+        int hour = time.getHour();
         do {
-            int minute = time.getMinuteOfHour();
+            int minute = time.getMinute();
             assertEquals(first <= minute && minute <= last && minute % 5 == 0, expression.matches(time));
             time = time.plusMinutes(1);
-        } while (time.getHourOfDay() == hour);
+        } while (time.getHour() == hour);
     }
 
     @Test
@@ -313,7 +320,7 @@ public class CronExpressionTest {
 
     private void assertWeekly() {
         for (int week = 1; week <= 52; week++) {
-            assertMatches(midnight().withWeekOfWeekyear(week).withDayOfWeek(1).minusDays(1));
+            assertMatches(midnight().withDayOfYear(7 * week).with(DayOfWeek.MONDAY).minusDays(1));
         }
     }
 
@@ -324,19 +331,15 @@ public class CronExpressionTest {
     }
 
     private void assertMonthly() {
-        for (int month = DateTimeConstants.JANUARY; month <= DateTimeConstants.DECEMBER; month++) {
-            assertMatches(midnight().withMonthOfYear(month).withDayOfMonth(1));
+        for (Month month : Month.values()) {
+            assertMatches(midnight().with(month).withDayOfMonth(1));
         }
     }
 
     private void assertHourly() {
         for (int day = 1; day <= 365; day++) {
             for (int hour = 0; hour <= 23; hour++) {
-                try {
-                    assertMatches(midnight().withDayOfYear(day).withHourOfDay(hour));
-                } catch (IllegalFieldValueException ignore) {
-                    // Ignore exceptions caused by daylight savings time transition
-                }
+                assertMatches(midnight().withDayOfYear(day).withHour(hour));
             }
         }
     }
@@ -346,16 +349,16 @@ public class CronExpressionTest {
     }
 
     private static final String formatString = "m H d M E yyyy";
-    private static final DateTimeFormatter jodaFormat = DateTimeFormat.forPattern(formatString);
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatString);
 
-    private void assertMatchesAll(List<DateTime> times) {
-        for (DateTime time : times)
+    private void assertMatchesAll(List<ZonedDateTime> times) {
+        for (ZonedDateTime time : times)
             assertMatches(time);
     }
 
-    private void assertMatches(DateTime time) {
+    private void assertMatches(ZonedDateTime time) {
         assertTrue(
-                jodaFormat.print(time).toUpperCase() + " doesn't match expression: " + expression,
+                time.format(formatter).toUpperCase() + " doesn't match expression: " + expression,
                 expression.matches(time)
         );
     }

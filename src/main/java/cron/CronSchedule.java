@@ -26,8 +26,8 @@ package cron;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import org.joda.time.DateTime;
 
+import java.time.ZonedDateTime;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -82,10 +82,10 @@ public class CronSchedule {
     }
 
     public void run() {
-        run(new DateTime());
+        run(ZonedDateTime.now());
     }
 
-    public void run(DateTime time) {
+    public void run(ZonedDateTime time) {
         for (CronExpression expression : runnables.keySet())
             if (expression.matches(time))
                 for (Runnable runnable : runnables.get(expression))

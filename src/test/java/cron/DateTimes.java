@@ -23,64 +23,67 @@
  */
 package cron;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-
+import java.time.DayOfWeek;
+import java.time.Month;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
+
 public class DateTimes {
-    public static Iterable<Date> toDates(Iterable<DateTime> times) {
-        return Iterables.transform(times, new Function<DateTime, Date>() {
-            @Override
-            public Date apply(DateTime input) {
-                return input.toDate();
-            }
-        });
+        public static Iterable<Date> toDates(Iterable<ZonedDateTime> times) {
+            return Iterables.transform(times, new Function<ZonedDateTime, Date>() {
+                @Override
+                public Date apply(ZonedDateTime input) {
+                    return Date.from(input.toInstant());
+                }
+            });
+        }
+
+    public static ZonedDateTime midnight() {
+        return now().truncatedTo(ChronoUnit.DAYS);
     }
 
-    public static DateTime midnight() {
-        return now().withTimeAtStartOfDay();
+    public static ZonedDateTime startOfHour() {
+        return now().truncatedTo(ChronoUnit.HOURS);
     }
 
-    public static DateTime startOfHour() {
-        return now().withMillisOfSecond(0).withSecondOfMinute(0).withMinuteOfHour(0);
+    public static ZonedDateTime now() {
+        return ZonedDateTime.now();
     }
 
-    public static DateTime now() {
-        return new DateTime();
+    public static ZonedDateTime lastOfMonth(ZonedDateTime t, DayOfWeek dayOfWeek) {
+        ZonedDateTime day = t.with(TemporalAdjusters.lastDayOfMonth()).with(dayOfWeek);
+        if (day.getMonth() != t.getMonth())
+            day = day.minusWeeks(1);
+        return day;
     }
 
-    public static DateTime lastOfMonth(DateTime t, int dayOfWeek) {
-        DateTime friday = t.dayOfMonth().withMaximumValue().withDayOfWeek(dayOfWeek);
-        if (friday.getMonthOfYear() != t.getMonthOfYear())
-            friday = friday.minusWeeks(1);
-        return friday;
-    }
-
-    public static DateTime nthOfMonth(DateTime t, int dayOfWeek, int desiredNumber) {
-        int month = t.getMonthOfYear();
-        t = t.withDayOfMonth(1).withDayOfWeek(dayOfWeek);
-        if (t.getMonthOfYear() != month)
+    public static ZonedDateTime nthOfMonth(ZonedDateTime t, DayOfWeek dayOfWeek, int desiredNumber) {
+        Month month = t.getMonth();
+        t = t.withDayOfMonth(1).with(dayOfWeek);
+        if (t.getMonth() != month)
             t = t.plusWeeks(1);
         int number = 1;
-        while (number < desiredNumber && t.getMonthOfYear() == month) {
+        while (number < desiredNumber && t.getMonth() == month) {
             number++;
             t = t.plusWeeks(1);
         }
         return t;
     }
 
-    public static DateTime nearestWeekday(DateTime t) {
-        if (t.getDayOfWeek() == DateTimeConstants.SATURDAY)
+    public static ZonedDateTime nearestWeekday(ZonedDateTime t) {
+        if (t.getDayOfWeek() == DayOfWeek.SATURDAY)
             return t.minusDays(1);
-        else if (t.getDayOfWeek() == DateTimeConstants.SUNDAY)
+        else if (t.getDayOfWeek() == DayOfWeek.SUNDAY)
             return t.plusDays(1);
         return t;
     }
 
-    public static DateTime startOfYear() {
+    public static ZonedDateTime startOfYear() {
         return midnight().withDayOfYear(1);
     }
 }
