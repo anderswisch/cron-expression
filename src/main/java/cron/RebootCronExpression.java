@@ -23,8 +23,7 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-
+import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -38,7 +37,7 @@ final class RebootCronExpression extends CronExpression {
     }
 
     @Override
-    public boolean matches(DateTime t) {
+    public boolean matches(ZonedDateTime t) {
         return matchOnce.getAndSet(false);
     }
 }

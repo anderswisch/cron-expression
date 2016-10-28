@@ -23,7 +23,7 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
+import java.time.ZonedDateTime;
 
 public class DefaultCronExpression extends CronExpression {
     private final String string;
@@ -62,11 +62,11 @@ public class DefaultCronExpression extends CronExpression {
     }
 
     @Override
-    public boolean matches(DateTime t) {
-        return second.contains(t.getSecondOfMinute())
-                && minute.contains(t.getMinuteOfHour())
-                && hour.contains(t.getHourOfDay())
-                && month.contains(t.getMonthOfYear())
+    public boolean matches(ZonedDateTime t) {
+        return second.contains(t.getSecond())
+                && minute.contains(t.getMinute())
+                && hour.contains(t.getHour())
+                && month.contains(t.getMonthValue())
                 && year.contains(t.getYear())
                 && dayOfWeek.matches(t)
                 && dayOfMonth.matches(t);

@@ -23,8 +23,9 @@
  */
 package cron;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
+import java.time.DayOfWeek;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAdjusters;
 
 public class DayOfMonthField extends DefaultField {
     private final boolean lastDay, nearestWeekday, unspecified;
@@ -40,16 +41,16 @@ public class DayOfMonthField extends DefaultField {
         return unspecified;
     }
 
-    public boolean matches(DateTime time) {
+    public boolean matches(ZonedDateTime time) {
         if (unspecified)
             return true;
         final int dayOfMonth = time.getDayOfMonth();
         if (lastDay) {
-            return dayOfMonth == time.dayOfMonth().withMaximumValue().getDayOfMonth();
+            return dayOfMonth == time.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth();
         } else if (nearestWeekday) {
-            int dayOfWeek = time.getDayOfWeek();
-            if ((dayOfWeek == DateTimeConstants.MONDAY && contains(time.minusDays(1).getDayOfMonth()))
-                    || (dayOfWeek == DateTimeConstants.FRIDAY && contains(time.plusDays(1).getDayOfMonth()))) {
+            DayOfWeek dayOfWeek = time.getDayOfWeek();
+            if ((dayOfWeek == DayOfWeek.MONDAY && contains(time.minusDays(1).getDayOfMonth()))
+                || (dayOfWeek == DayOfWeek.FRIDAY && contains(time.plusDays(1).getDayOfMonth()))) {
                 return true;
             }
         }
